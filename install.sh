@@ -7,14 +7,20 @@ SCRIPT_PATH="$INSTALL_DIR/$SCRIPT_NAME"
 TRFC_CMD="trfc"  # 新的命令名称
 TRFC_PATH="$INSTALL_DIR/$TRFC_CMD"
 
-# 下载 traffic_control.sh 脚本
-echo "正在下载 traffic_control.sh 脚本到 $INSTALL_DIR..."
-curl -o "$SCRIPT_PATH" https://example.com/path/to/traffic_control.sh
+# 检查同级目录下是否已有 traffic_control.sh
+if [ -f "./traffic_control.sh" ]; then
+    echo "当前目录已存在 traffic_control.sh，跳过下载步骤。"
+    SCRIPT_PATH="./traffic_control.sh"
+else
+    echo "当前目录未找到 traffic_control.sh，正在下载..."
+    # 下载 traffic_control.sh 脚本
+    curl -o "$SCRIPT_PATH" https://example.com/path/to/traffic_control.sh
 
-# 检查是否下载成功
-if [ ! -f "$SCRIPT_PATH" ]; then
-    echo "下载失败，请检查 URL 或网络连接！"
-    exit 1
+    # 检查是否下载成功
+    if [ ! -f "$SCRIPT_PATH" ]; then
+        echo "下载失败，请检查 URL 或网络连接！"
+        exit 1
+    fi
 fi
 
 # 设置脚本可执行权限
