@@ -1,11 +1,33 @@
 #!/bin/bash
 
+# 配置文件路径
+CONFIG_FILE="./config.ini"
+
 # 安装目录
 INSTALL_DIR="/usr/local/bin"
 SCRIPT_NAME="traffic_control.sh"
 SCRIPT_PATH="$INSTALL_DIR/$SCRIPT_NAME"
 TRFC_CMD="trfc"  # 新的命令名称
 TRFC_PATH="$INSTALL_DIR/$TRFC_CMD"
+
+# 读取配置文件的值
+function read_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        default_limit=$(grep '^default_limit' "$CONFIG_FILE" | cut -d'=' -f2 | tr -d '[:space:]')
+        default_block_traffic=$(grep '^default_block_traffic' "$CONFIG_FILE" | cut -d'=' -f2 | tr -d '[:space:]')
+        default_time=$(grep '^default_time' "$CONFIG_FILE" | cut -d'=' -f2 | tr -d '[:space:]')
+        default_services=$(grep '^default_services' "$CONFIG_FILE" | cut -d'=' -f2 | tr -d '[:space:]')
+    else
+        echo "配置文件 $CONFIG_FILE 不存在，使用默认设置！"
+        default_limit="100G"
+        default_block_traffic="none"
+        default_time="per 1h"
+        default_services="sing-box, nginx"
+    fi
+}
+
+# 在安装脚本开始时读取配置
+read_config
 
 # 检查同级目录下是否已有 traffic_control.sh
 if [ -f "./traffic_control.sh" ]; then
@@ -46,8 +68,6 @@ if [[ "$1" == "-time" && ! -z "$2" ]]; then
         for time_config in "${@:2}"; do
             echo "添加单次定时任务：$time_config"
             # 转换为 cron 表达式或其他调度方式
-            # 如果是指定日期和时间点的格式，转换为相应的 cron 表达式
-            # 例如：2025-10-15 11:16:37 -> 37 16 15 10 * 2025
             cron_time=$(date -d "$time_config" "+%M %H %d %m * %Y")
             if [ $? -eq 0 ]; then
                 (crontab -l 2>/dev/null; echo "$cron_time $SCRIPT_PATH") | crontab -
